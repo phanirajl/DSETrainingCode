@@ -1,0 +1,138 @@
+// properties for the user
+schema.propertyKey('uid').Uuid().single().ifNotExists().create()
+schema.propertyKey('birthday').Timestamp().single().ifNotExists().create()
+schema.propertyKey('first_name').Text().single().ifNotExists().create()
+schema.propertyKey('last_name').Text().single().ifNotExists().create()
+schema.propertyKey('mid_name').Text().single().ifNotExists().create()
+schema.propertyKey('occupation').Text().single().ifNotExists().create()
+schema.propertyKey('ordinal').Text().single().ifNotExists().create()
+schema.propertyKey('rdb_user_seq').Int().single().ifNotExists().create()
+schema.propertyKey('title').Text().single().ifNotExists().create()
+
+
+// properties for the address
+schema.propertyKey('uid').Uuid().single().ifNotExists().create()
+schema.propertyKey('address1').Text().single().ifNotExists().create()
+schema.propertyKey('address2').Text().single().ifNotExists().create()
+schema.propertyKey('address3').Text().single().ifNotExists().create()
+schema.propertyKey('city').Text().single().ifNotExists().create()
+schema.propertyKey('country').Text().single().ifNotExists().create()
+schema.propertyKey('rdb_address_seq').Int().single().ifNotExists().create()
+schema.propertyKey('state_prov').Text().single().ifNotExists().create()
+schema.propertyKey('postal_zip').Text().single().ifNotExists().create()
+
+// properties for the user to address edge
+schema.propertyKey('type').Text().single().ifNotExists().create()  // Home, summer, winter, etc
+schema.propertyKey('primary').Boolean().ifNotExists().create()
+
+
+// properties for the user to user relationship 'isAssociatedWith'
+schema.propertyKey('type').Text().single().ifNotExists().create() // reuse from above so will not recreate, son, daughter, depedant, roomate, etc
+
+
+// properties for the user to user relationship 'manages'
+schema.propertyKey('direct').Boolean().single().ifNotExists().create() // reuse from above so will not recreate, direct, dotted line, etc
+
+
+// properties for corporation
+schema.propertyKey('ein').Text().single().ifNotExists().create()
+schema.propertyKey('type').Text().single().ifNotExists().create()
+schema.propertyKey('name').Text().single().ifNotExists().create()
+schema.propertyKey('description').Text().single().ifNotExists().create()
+
+
+// properties for the user to corp relationship
+schema.propertyKey('startDate').Timestamp().single().ifNotExists().create()
+schema.propertyKey('endDate').Timestamp().single().ifNotExists().create()
+
+// properties for the corp to address relationship
+schema.propertyKey('primary').Boolean().ifNotExists().create()
+
+
+// properties for a corp to corp relationship
+schema.propertyKey('isADivision').Boolean().ifNotExists().create()
+schema.propertyKey('divisionName').Text().single().ifNotExists().create()
+
+
+// properties for the product 
+schema.propertyKey('sku').Text().single().ifNotExists().create()
+schema.propertyKey('name').Text().single().ifNotExists().create()
+schema.propertyKey('isSubscription').Boolean().single().ifNotExists().create()
+schema.propertyKey('isServices').Boolean().single().ifNotExists().create()
+schema.propertyKey('description').Text().single().ifNotExists().create()
+schema.propertyKey('cores').Int().single().ifNotExists().create()
+schema.propertyKey('hours').Int().single().ifNotExists().create()
+
+// properties for buying a product - Invoice
+schema.propertyKey('invoiceId').Text().single().ifNotExists().create()
+schema.propertyKey('subscriptionStart').Timestamp().single().ifNotExists().create()
+schema.propertyKey('subscriptionEnd').Timestamp().single().ifNotExists().create()
+schema.propertyKey('serviceHours').Int().single().ifNotExists().create()
+schema.propertyKey('price').Float().single().ifNotExists().create()
+schema.propertyKey('notes').Text().single().ifNotExists().create()
+
+
+// properties for invoiceContains edge
+
+
+// properties for workedOnDeal
+schema.propertyKey('role').Text().single().ifNotExists().create()
+schema.propertyKey('notes').Text().single().ifNotExists().create()
+
+
+// properties for performing services
+schema.propertyKey('role').Text().single().ifNotExists().create()
+schema.propertyKey('startDate').Timestamp().single().ifNotExists().create()
+schema.propertyKey('endDate').Timestamp().single().ifNotExists().create()
+schema.propertyKey('hours').Int().single().ifNotExists().create()
+schema.propertyKey('notes').Text().single().ifNotExists().create()
+
+
+// user vertex
+schema.vertexLabel("user").partitionKey("uid").properties('birthday','first_name', 'last_name','mid_name','occupation','ordinal','rdb_user_seq','title').ifNotExists().create()
+
+
+// address vertex
+schema.vertexLabel("address").partitionKey("uid").properties('address1','address2', 'address3','city','country','rdb_address_seq','state_prov','postal_zip').ifNotExists().create()
+
+
+// user to address edge
+schema.edgeLabel('hasA').multiple().properties('type','primary').connection('user','address').ifNotExists().create()
+
+
+// user to user personal relationship
+schema.edgeLabel('hasAPersonalRelationship').multiple().properties('type').connection('user','user').ifNotExists().create()
+
+
+// user to user manages edge
+schema.edgeLabel('manages').multiple().properties('direct').connection('user','user').ifNotExists().create()
+
+
+// corp vertex
+schema.vertexLabel('corporation').partitionKey('ein').properties('type','name', 'description').ifNotExists().create()
+
+// user to corp edge
+schema.edgeLabel('worksFor').multiple().properties('startDate', 'endDate').connection('user', 'corporation').ifNotExists().create()
+
+
+// corp to address edge
+schema.edgeLabel('hasALocation').multiple().properties('primary').connection('corporation', 'address').ifNotExists().create()
+
+
+// corp to corp edge
+schema.edgeLabel('contains').multiple().properties('isADivision', 'divisionName').connection('corporation','corporation').ifNotExists().create()
+
+
+// the product vertex
+schema.vertexLabel("product").partitionKey("sku").properties('name','isSubscription', 'isServices','description','cores','hours').ifNotExists().create()
+
+
+// corp that sales product relationship
+schema.edgeLabel('sales').multiple().connection('corporation','product').ifNotExists().create()
+
+// corp buys product relationship
+schema.vertexLabel("invoice").partitionKey("invoiceId").properties('subscriptionStart','subscriptionEnd', 'serviceHours','price','notes').ifNotExists().create()
+schema.edgeLabel('purchases').multiple().connection('corporation','invoice').ifNotExists().create()
+schema.edgeLabel('containsProducts').multiple().connection('invoice','product').ifNotExists().create()
+schema.edgeLabel('workedOnDeal').multiple().properties('role').connection('user', 'invoice').ifNotExists().create()
+schema.edgeLabel('preformedServices').multiple().properties('role','startDate', 'endDate', 'hours','notes').connection('user','invoice').ifNotExists().create()

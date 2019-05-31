@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<schema name="autoSolrSchema" version="1.5">
+  <types>
+    <fieldType class="org.apache.solr.schema.StrField" name="StrField" />
+    <fieldType class="com.datastax.bdp.search.solr.core.types.SimpleDateField" name="SimpleDateField" />
+    <fieldType class="org.apache.solr.schema.TrieDoubleField" name="TrieDoubleField" />
+    <fieldType class="org.apache.solr.schema.TimeUUIDField" name="TimeUUIDField" />
+    <fieldtype class="solr.TextField" name="TextField">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory" />
+        <filter class="solr.LowerCaseFilterFactory" />
+      </analyzer>
+    </fieldtype>
+    <fieldtype class="solr.TextField" name="PhoneticTextField">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory" />
+        <filter class="solr.LowerCaseFilterFactory" />
+        <filter class="solr.PhoneticFilterFactory" encoder="ColognePhonetic" />
+      </analyzer>
+    </fieldtype>
+    <fieldtype class="solr.LatLonType" name="LatLon" subFieldSuffix="_coordinate" />
+    <fieldtype class="solr.TrieDoubleField" name="LLTrieDoubleField" omitNorms="true" positionIncrementGap="0"
+      precisionStep="8" />
+  </types>
+  <fields>
+    <field indexed="true" multiValued="false" name="hamlet" type="TextField" />
+    <field docValues="true" indexed="true" multiValued="false" name="title" type="TextField" />
+    <field docValues="true" indexed="true" multiValued="false" name="occupation" type="TextField" />
+    <field indexed="true" multiValued="false" name="zip" type="StrField" />
+    <field docValues="true" indexed="true" multiValued="false" name="birthday" type="SimpleDateField" />
+    <field docValues="true" indexed="true" multiValued="false" name="country" type="TextField" />
+    <field indexed="true" multiValued="false" name="sex" type="StrField" />
+    <field indexed="true" multiValued="false" name="address1" type="StrField" />
+    <field docValues="true" indexed="true" multiValued="false" name="state" type="TextField" />
+    <field indexed="true" multiValued="false" name="address3" type="StrField" />
+    <field docValues="true" indexed="true" multiValued="false" name="longitude" type="TrieDoubleField" />
+    <field indexed="true" multiValued="false" name="race" type="StrField" />
+    <field indexed="true" multiValued="false" name="address2" type="StrField" />
+    <field indexed="true" multiValued="false" name="marital" type="StrField" />
+    <field docValues="true" indexed="true" multiValued="false" name="city" type="TextField" />
+    <field docValues="true" indexed="true" multiValued="false" name="latitude" type="TrieDoubleField" />
+    <field indexed="true" multiValued="false" name="first_name" type="PhoneticTextField" />
+    <field indexed="true" multiValued="false" name="geo" type="LatLon" />
+    <field docValues="true" indexed="true" multiValued="false" name="unique" type="TimeUUIDField" />
+    <field indexed="true" multiValued="false" name="ordinal" type="StrField" />
+    <field indexed="true" multiValued="false" name="address_name" type="StrField" />
+    <field indexed="true" multiValued="false" name="mid_name" type="TextField" />
+    <field indexed="true" multiValued="false" name="last_name" type="TextField" />
+    <field docValues="true" indexed="true" multiValued="true" name="name" stored="true" type="PhoneticTextField" />
+    
+    <dynamicField indexed="true" name="*_coordinate" stored="false" type="LLTrieDoubleField" />
+    
+    <copyField dest="name" source="first_name" />
+    <copyField dest="name" source="last_name" />
+    <copyField dest="name" source="mid_name" />
+  </fields>
+  <uniqueKey>(unique,address_name)</uniqueKey>
+</schema>
+

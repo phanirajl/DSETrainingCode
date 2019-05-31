@@ -1,0 +1,23 @@
+{
+  "cluster": {
+    "snitch": "GossipingPropertyFileSnitch",
+    "nodes": {
+      "0": {
+        "datacenter": "Enterprise",
+        "rack": "rack1",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "1": {
+        "datacenter": "Enterprise",
+        "rack": "rack1",
+        "node_type": "SearchAnalytics"
+      },
+      "2": {
+        "datacenter": "Enterprise",
+        "rack": "rack1",
+        "node_type": "SearchAnalytics"
+      }
+    }
+  }
+}

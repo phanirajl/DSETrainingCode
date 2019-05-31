@@ -1,0 +1,23 @@
+{
+  "cluster": {
+    "snitch": "GossipingPropertyFileSnitch",
+    "nodes": {
+      "0": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "1": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics"
+      },
+      "2": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics"
+      }
+    }
+  }
+}

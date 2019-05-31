@@ -1,0 +1,55 @@
+{
+  "cluster": {
+    "snitch": "GossipingPropertyFileSnitch",
+    "nodes": {
+      "0": {
+        "datacenter": "OpsCenter",
+        "rack": "ops1",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "1": {
+        "datacenter": "OpsCenter",
+        "rack": "ops1",
+        "node_type": "SearchAnalytics"
+      },
+      "2": {
+        "datacenter": "OpsCenter",
+        "rack": "ops1",
+        "node_type": "SearchAnalytics"
+      },
+      "3": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "4": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics"
+      },
+      "5": {
+        "datacenter": "ManualProvisioned",
+        "rack": "mon1",
+        "node_type": "SearchAnalytics"
+      },
+      "6": {
+        "datacenter": "LCMProvisioned",
+        "rack": "lcm1",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "7": {
+        "datacenter": "LCMProvisioned",
+        "rack": "lcm1",
+        "node_type": "SearchAnalytics"
+      },
+      "8": {
+        "datacenter": "LCMProvisioned",
+        "rack": "lcm1",
+        "node_type": "SearchAnalytics"
+      }
+    }
+  }
+}

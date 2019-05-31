@@ -1,0 +1,18 @@
+{
+  "cluster": {
+    "snitch": "GossipingPropertyFileSnitch",
+    "nodes": {
+      "0": {
+        "datacenter": "DSE-Enablement",
+        "rack": "success",
+        "node_type": "SearchAnalytics",
+        "seed": "True"
+      },
+      "1": {
+        "datacenter": "DSE-Enablement",
+        "rack": "success",
+        "node_type": "SearchAnalytics"
+      }
+    }
+  }
+}

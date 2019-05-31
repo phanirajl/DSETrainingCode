@@ -1,0 +1,54 @@
+{
+	"cluster": {
+		"snitch": "GossipingPropertyFileSnitch",
+		"nodes": {
+			"0": {
+				"datacenter": "opscenter",
+				"rack": "rack1",
+				"node_type": "Cassandra"
+			},
+			"1": {
+				"datacenter": "data-store",
+				"rack": "rack1",
+				"node_type": "Cassandra",
+				"seed": "True"
+			},
+			"2": {
+				"datacenter": "data-store",
+				"rack": "rack1",
+				"node_type": "Cassandra"
+			},
+			"3": {
+				"datacenter": "data-store",
+				"rack": "rack1",
+				"node_type": "Cassandra"
+			},
+			"4": {
+				"datacenter": "data-store",
+				"rack": "rack1",
+				"node_type": "SearchAnalytics"
+			},
+			"5": {
+				"datacenter": "processing",
+				"rack": "rack1",
+				"node_type": "Search",
+				"seed": "True"
+			},
+			"6": {
+				"datacenter": "processing",
+				"rack": "rack1",
+				"node_type": "Spark"
+			},
+			"7": {
+				"datacenter": "processing",
+				"rack": "rack1",
+				"node_type": "SearchAnalytics"
+			},
+			"8": {
+				"datacenter": "processing",
+				"rack": "rack1",
+				"node_type": "Cassandra"
+			}
+		}
+	}
+}
