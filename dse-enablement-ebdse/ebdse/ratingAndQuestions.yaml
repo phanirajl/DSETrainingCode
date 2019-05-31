@@ -1,0 +1,75 @@
+---
+tags:
+  group: create
+params:
+  prepared: false
+statements:
+- create-keyspace:  |
+    CREATE KEYSPACE IF NOT EXISTS aurabute 
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
+- create-rating-table: |
+    CREATE TABLE IF NOT EXISTS product_rating (
+    product_id                uuid,
+    rating_id                 timeuuid,
+    avg_rating                double static,
+    rating_user_id            timeuuid,
+    rating_user_handle        text,
+    star_rating               int,
+    comments                  text, s
+    PRIMARY KEY ((product_id), rating_id));
+- create-question-table: |
+    CREATE TABLE IF NOT EXISTS aurabute.product_question (
+    product_id uuid,
+    question_id timeuuid,
+    answer_id timeuuid,
+    answer text,
+    answer_user_handle text,
+    answer_user_id timeuuid,
+    question text,
+    question_user_handle text,
+    question_user_id timeuuid,
+    PRIMARY KEY ((product_id), question_id, answer_id));
+
+---
+# add enablement-ebdse-function jar to class path first
+# change location of seed files
+# then run
+# ebdse activity type=cql alias=ratings yaml=productRatings tags=group:ratings host=localhost cycles=1000
+tags:
+  group: ratings
+statements: 
+- insert-rating:  |
+    INSERT INTO aurabute.product_rating (product_id, rating_id, avg_rating, rating_user_id, 
+    rating_user_handle, star_rating, comments) VALUES
+    (?product_id, ?rating_id, ?avg_rating, ?rating_user_id, ?rating_user_handle, ?star_rating, ?comments);
+bindings:
+  product_id: ModuloCSVLineToUUID('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanRetailData.csv','product_id')
+  rating_id: ToEpochTimeUUID()
+  avg_rating: FixedValue(0); ToDouble()
+  rating_user_id: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_id'); StringToUUID() 
+  rating_user_handle: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_name')
+  star_rating: WeightedStrings('1:.10;2:0.10;3:.20;4:.30;5:.30'); ToInt()
+  comments: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanRetailData.csv','description')  
+ 
+---
+# add enablement-ebdse-function jar to class path first
+# change location of seed files
+# then run
+# ebdse activity type=cql alias=questions yaml=productRatings tags=group:questions host=localhost cycles=1000
+tags:
+  group: questions
+statements: 
+- insert-question:  |
+    INSERT INTO aurabute.product_question (product_id, question_id, answer_id, answer, 
+    answer_user_handle, answer_user_id, question, question_user_handle, question_user_id) VALUES
+    (?pid, ?qid, ?aid, ?answ, ?ahand, ?auid, ?quest, ?quhan, ?quid);
+bindings:
+  pid: ModuloCSVLineToUUID('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanRetailData.csv','product_id')
+  qid: ToEpochTimeUUID()
+  aid: ToEpochTimeUUID()
+  answ: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanRetailData.csv','description') 
+  ahand: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_name')
+  auid: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_id'); StringToUUID() 
+  quest: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanRetailData.csv','description') 
+  quhan: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_name')
+  quid: ModuloCSVLineToString('/Users/matwater/Documents/BootCamp/DataSets/Retail/CleanUserData.csv','user_id'); StringToUUID() 
