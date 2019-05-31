@@ -1,0 +1,39 @@
+# To init schema:
+#  activity type=cql yaml=examplecollection host=dse50 tags=group:schema showcql=true -v
+# To write some values:
+#  activity type=cql yaml=examplecollection host=dse50 tags=group:write showcql=true cycles=100 -v
+# To purge the test data: (caution is advised)
+#  activity type=cql yaml=examplecollection host=dse50 tags=group:purge showcql=true -v
+---
+tags:
+  group: purge
+statements:
+- name: create-keyspace
+  prepared: false
+  statement: |
+    drop keyspace <<keyspace:testcollectionks>>;
+---
+tags:
+  group: schema
+params:
+  prepared: false
+statements:
+- create-keyspace: |
+    create keyspace if not exists <<keyspace:testcollectionks>>
+    WITH replication = <<replication:{'class': 'SimpleStrategy', 'replication_factor': '1'}>>
+    AND durable_writes = true;
+- create-table-users: |
+    create table if not exists <<keyspace:testcollectionks>>.<<testtable:collections>> (
+      partition text,
+      list list<text>,
+      primary key (partition)
+    );
+---
+tags:
+  group: write
+statement: |
+    insert into <<keyspace:testcollectionks>>.<<testtable:collections>> (partition, list)
+    values (?partition, ?list);
+bindings:
+  partition: NumberNameToString() -> String
+  list: ListMapper(5,LongToStringExample()) -> List

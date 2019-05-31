@@ -1,0 +1,247 @@
+tags:
+- group: ddl
+- name: create-keyspace
+  prepared: false
+  statement: |
+    create keyspace if not exists <<KEYSPACE:testks>> WITH replication =
+    {'class': 'SimpleStrategy', 'replication_factor': <<RF:1>>};
+  cl: ONE
+- name: create-telemetry-table
+  statement: |
+    create table if not exists <<KEYSPACE:testks>>.<<TABLE:testtable>>_telemetry (
+    source int,      // data source id
+    param text,      // variable name for a type of measurement
+    ts timestamp,    // timestamp of measurement
+    data text,       // measurement data
+    PRIMARY KEY ((source, param), ts)
+    ) WITH CLUSTERING ORDER BY (param ASC, ts DESC)
+---
+- tags:
+    group: dml
+- name: write-telemetry
+  statement: |
+    insert into <<KEYSPACE:testks>>.<<TABLE:testtable>>_telemetry (source, param, ts, data)
+    values (<<source>>,<<param>>,<<ts>>,<<data>>);
+  bindings:
+      source: ThreadNumToInteger
+      param: RandomLineToString(data/variable_words.txt)
+      ts: ToDate
+      data: RandomFileExtractToString(data/lorem_ipsum_full.txt,100,200)
+      
+---      
+tags:      
+  name: create-demo
+statements:
+ - system.graph('demo').ifNotExists().create()
+---
+# run type=dsegraph yaml=sanitychecks/graph-schema host=dse50 graphname=demo tags=name:dev-mode -vvvtags:
+tags:
+ name: dev-mode
+statements:
+ - schema.config().option('graph.schema_mode').set('Development')
+---
+#./ebdse run type=dsegraph yaml=c360.yaml host=127.0.0.1 cycles=1000
+#tags=name:add-phonerelmgr graphname=demo -v
+tags:
+ name: add-phonerelmgr
+statements:
+  - >-
+    phone = graph.addVertex(label, 'Phone_Number','PhoneID', ?phoneid, 'PhoneNumber', ?phone);
+    relationshipMgr = graph.addVertex(label, 'Relationship_Manager','RelationshipManagerID', ?relmanid, 'CreatedDate',
+    ?createdate, 'InactivatedDate', ?inactivateddate, 'SourceIdentificationType', ?sitype, 'SourceClientID' ,
+    ?sourceclientid, 'Prefix', ?prefix, 'GivenNameOne', ?gnone, 'GivenNameTwo', ?gntwo, 'GivenNameThree', ?gnthree,
+    'GivenNameFour', ?gnfour, 'LastName', ?ln, 'Career', ?career, 'JobTitle', ?jd, 'EmploymentDate', ?edate,
+    'InvestmentRelevantProfessional', ?irp, 'CurrentEmployer', ?currentemployer, 'PreviousEmployer',
+    ?previousemployer, 'EmploymentStatus', ?employmentstatus, 'OccupationType',?occupationtype);
+    relationshipMgr.addEdge('HAS_PHONE_NUMBER', phone, 'StartDate',?startdate, 'EndDate', ?enddate, 'LOCGROUPTPCODE',
+    ?lcode );
+bindings:
+ phoneid: ToEpochTimeUUID() -> String
+# TODO: add uniform_long
+# phone: compose HashRange(10000000000,99999999999) -> long; Combinations('0-9;0-9;0-9;-;0-9;0-9;0-9;-;0-9;0-9;0-9;0-9') -> String
+ phone: Combinations('0-9;0-9;0-9;-;0-9;0-9;0-9;-;0-9;0-9;0-9;0-9')
+ createdate: Add(400000); Div(<<instruments:30000>>); StringDateWrapper("YYYY-MM-dd") -> text
+ inactivateddate: Add(16000000); Div(<<instruments:30000>>); StringDateWrapper("YYYY-MM-dd") -> text
+ sitype: WeightedStrings('type1:0.1;type2:0.1;type3:0.1;type4:0.2;type5:0.5')
+ sourceclientid: Add(200000); ToEpochTimeUUID(); ToString() -> String
+ prefix: WeightedStrings('Mr:0.45;Mrs:0.25;Ms:0.1;Miss:0.1;Dr:0.05')
+ gnone: HashedLineToString('data/names.txt')
+ gntwo: Add(10); HashedLineToString('data/names.txt') -> String
+ gnthree: Add(20); HashedLineToString('data/names.txt') -> String
+ gnfour: Add(30); HashedLineToString('data/names.txt') -> String
+ ln: Add(30); HashedLineToString('data/lastnames.txt') -> String
+ career: Add(0); HashedLineToString('data/careers.txt') -> String
+ jd: Add(0); HashedLineToString('data/jobdescription.txt') -> String
+ edate: Add(1500000); Div(<<instruments:30000>>); StringDateWrapper("YYYY-MM-dd") -> text
+# I don't have a way to make  firstname, lastname
+ irp: Add(50); HashedLineToString('data/names.txt') -> String
+ currentemployer: Add(50); HashedLineToString('data/companies.txt') -> String
+ previousemployer: Add(50); HashedLineToString('data/companies.txt') -> String
+ employmentstatus: WeightedStrings('true:0.9;false:0.1')
+ occupationtype: WeightedStrings('Corporation:0.9;Self Employed:0.05;Small Business:0.05')
+ startdate: Add(400001); Div(<<instruments:30000>>); StringDateWrapper("YYYY-MM-dd") -> text
+ enddate: Add(1600001); Div(<<instruments:30000>>); StringDateWrapper("YYYY-MM-dd") -> text
+ lcode: WeightedStrings('a:0.1;b:0.1;c:0.1;c:0.2;d:0.5')
+ relmanid: Add(100000); ToEpochTimeUUID(); ToString() -> String
+ 
+ 
+ 
+ # ./ebdse -vv run type=dsegraph yaml=paths tags=phase:create-graph cycles=1
+
+blocks:
+- name: create-graph
+  tags:
+   phase: create-graph
+  statements:
+   # things in pointy brackets <<thing>> come from the CLI and can have a default
+   # <<thing:default>>
+   - system.graph('<<nameofgraph:paths>>').ifNotExists().create()
+
+# ./ebdse -vv run type=dsegraph yaml=paths graphname=paths tags=phase:graph-schema cycles=1
+- name: graph-schema
+  tags:
+   phase: graph-schema
+  statements:
+   - >-
+    schema.propertyKey('personId').Text().ifNotExists().create();
+    schema.propertyKey('appId').Text().ifNotExists().create();
+    schema.propertyKey('accountId').Text().ifNotExists().create();
+    schema.propertyKey('eventId').Text().ifNotExists().create();
+    schema.propertyKey('cardNum').Text().ifNotExists().create();
+    schema.propertyKey('deviceId').Text().ifNotExists().create();
+    schema.propertyKey('hasFamily').Text().ifNotExists().create();
+    schema.propertyKey('hasApp').Text().ifNotExists().create();
+    schema.propertyKey('listedOnApp').Text().ifNotExists().create();
+    schema.propertyKey('hasEvent').Text().ifNotExists().create();
+    schema.propertyKey('badActor').Text().ifNotExists().create();
+    schema.vertexLabel('person').partitionKey('personId').properties('badActor', 'hasFamily', 'hasApp', 'listedOnApp').ifNotExists().create();
+    schema.vertexLabel('application').partitionKey('appId').ifNotExists().create();
+    schema.vertexLabel('account').partitionKey('accountId').properties('hasEvent').ifNotExists().create();
+    schema.vertexLabel('event').partitionKey('eventId').ifNotExists().create();
+    schema.vertexLabel('creditCard').partitionKey('cardNum').ifNotExists().create();
+    schema.vertexLabel('device').partitionKey('deviceId').ifNotExists().create();
+    schema.edgeLabel('familyMember').multiple()
+                .connection('person', 'person').ifNotExists().create();
+    schema.edgeLabel('submittedApp').multiple()
+                .connection('person', 'application').ifNotExists().create();
+    schema.edgeLabel('listedOnApp').multiple()
+                .connection('application', 'person').ifNotExists().create();
+    schema.edgeLabel('ownsAccount').multiple()
+                .connection('person', 'account').ifNotExists().create();
+    schema.edgeLabel('paysWith').multiple()
+                .connection('person', 'creditCard').ifNotExists().create();
+    schema.edgeLabel('uses').multiple()
+                .connection('person', 'device').ifNotExists().create();
+    schema.edgeLabel('transferInto').multiple()
+                .connection('event', 'account').ifNotExists().create();
+    schema.edgeLabel('transferFrom').multiple()
+                .connection('account', 'event').ifNotExists().create();
+# ./ebdse -v run type=dsegraph yaml=paths graphname=paths tags=phase:prod-mode cycles=1
+- name: prod-mode
+  tags:
+   phase: prod-mode
+  statements:
+   - schema.config().option('graph.schema_mode').set('Production');
+
+# ./ebdse -v run type=dsegraph yaml=paths graphname=paths tags=phase:prod-mode cycles=1
+- name: queries-enabled
+  tags:
+   phase: queries-enabled
+  statements:
+  - >-
+   schema.config().option('graph.allow_scan').set('True');
+# Start graph construction by adding the people
+- name: insert-people
+  tags:
+   phase: insert-people
+  statements:
+    # Parameters in {} are Anchors. Each Anchor needs a binding to a generator.
+    # Generators are defined in the bindings section
+    - >-
+     g.addV('person').property('personId',{personId})
+      .property('badActor', 'No')
+      .property('hasFamily', 'No')
+      .property('hasApp', 'No')
+      .property('listedOnApp', 'No')
+  bindings:
+    personId: Shuffle(0L,<<person:15000>>L,1); Template('person-{}',LongToString());
+
+
+# Start graph construction by adding the person--owns-->account vertex-edge-vertex
+- name: add-ownsAccount-edge
+  tags:
+   phase: add-ownsAccount-edge
+  statements:
+    # Parameters in {} are Anchors. Each Anchor needs a binding to a generator.
+    # Generators are defined in the bindings section
+    - >-
+     g.addV('person').property('personId',{personId})
+      .property('badActor',{badActor}).as("personA")
+      .addV('account').property('accountId',{accountId}).as("account")
+      .addE('ownsAccount').from("personA")
+      .addV('creditCard').property('cardNum',{cardNum}).as("card")
+      .addE('paysWith').from("personA")
+      .addV('device').property('deviceId',{deviceId}).as("device")
+      .addE('uses').from("personA")
+  bindings:
+    personId: Shuffle(0L,<<person:15000>>L,1); Template('person-{}',LongToString());
+    accountId: Shuffle(0L,<<account:15000>>L,1); Template('account-{}',LongToString());
+    cardNum: HashRange(1,<<creditCard:15000>>); Template('card-{}',LongToString());
+    deviceId: HashRange(1,<<device:15000>>);; Template('device-{}',LongToString());
+    badActor: WeightedStrings('Yes:0.05;No:0.95')
+
+# Next, continue graph construction by adding the person--familyMember-->person [and vice versa] vertex-edge-vertex
+- name: add-familyMember-edge
+  tags:
+   phase: add-familyMember-edge
+  statements:
+    # Parameters in {} are Anchors. Each Anchor needs a binding to a generator.
+    # Generators are defined in the bindings section
+    - >-
+     g.addV('person').property('personId',{personIdA}).property('hasFamily','Yes').as("personA")
+      .addV('person').property('personId',{personIdB}).property('hasFamily','Yes').as("personB")
+      .addE('familyMember').from("personA")
+      .select("personB").addE('familyMember').to("personA")
+  bindings:
+    personIdA: HashRange(1,<<person:15000>>); Mod(<<person:15000>>); Template('person-{}',LongToString());
+    personIdB: HashRange(1,<<person:15000>>); Add(1); Mod(<<person:15000>>); Template('person-{}',LongToString());
+
+# Next, continue graph construction by adding the person--submittedApp-->application, and app--listedOnApp->person vertex-edge-vertex
+- name: add-submittedApp-edge
+  tags:
+   phase: add-submittedApp-edge
+  statements:
+    # Parameters in {} are Anchors. Each Anchor needs a binding to a generator.
+    # Generators are defined in the bindings section
+    - >-
+     g.addV('person').property('personId',{personIdA}).property('hasApp','Yes').as("personA")
+      .addV('person').property('personId',{personIdB}).property('listedOnApp','Yes').as("personB")
+      .addV('application').property('appId',{appId}).as("app")
+      .addE('submittedApp').from("personA")
+      .select("personB")
+      .addE('listedOnApp').from("app")
+  bindings:
+   personIdA: HashRange(1,<<person:15000>>); Mod(<<person:15000>>); Template('person-{}',LongToString());
+   personIdB: HashRange(1,<<person:15000>>); Add(1); Mod(<<person:15000>>); Template('person-{}',LongToString());
+   appId: Shuffle(0L,<<application:15000>>L,1); Template('app-{}',LongToString());
+
+# Lastly, create events to/from accounts
+- name: add-event-edge
+  tags:
+   phase: add-event-edge
+  statements:
+    # Parameters in {} are Anchors. Each Anchor needs a binding to a generator.
+    # Generators are defined in the bindings section
+    - >-
+     g.addV('event').property('eventId',{eventId}).as("event")
+      .addV('account').property('accountId',{accountIdA}).property('hasEvent','Yes').as("accA")
+      .addV('account').property('accountId',{accountIdB}).property('hasEvent','Yes').as("accB")
+      .addE('transferInto').from("event")
+      .select("accA")
+      .addE('transferFrom').to("event")
+  bindings:
+    eventId: Shuffle(0L,<<event:40000>>L,1); Template('event-{}',LongToString());
+    accountIdA: HashRange(1,<<event:40000>>); Mod(<<account:15000>>); Template('account-{}',LongToString());
+    accountIdB: HashRange(1,<<event:40000>>); Add(1); Mod(<<account:15000>>); Template('account-{}',LongToString());
+
+ 
